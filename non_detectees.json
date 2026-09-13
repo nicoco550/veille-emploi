@@ -1,0 +1,234 @@
+[
+  {
+    "societe": "Amundi",
+    "ats": "inconnu",
+    "domaine": "amundi.com"
+  },
+  {
+    "societe": "AXA IM",
+    "ats": "inconnu",
+    "domaine": "axa-im.com"
+  },
+  {
+    "societe": "BNP Paribas AM",
+    "ats": "inconnu",
+    "domaine": "bnpparibas-am.com"
+  },
+  {
+    "societe": "Ostrum AM",
+    "ats": "inconnu",
+    "domaine": "ostrum.com"
+  },
+  {
+    "societe": "DNCA Finance",
+    "ats": "inconnu",
+    "domaine": "dnca-investments.com"
+  },
+  {
+    "societe": "Mirova",
+    "ats": "inconnu",
+    "domaine": "mirova.com"
+  },
+  {
+    "societe": "Candriam",
+    "ats": "inconnu",
+    "domaine": "candriam.com"
+  },
+  {
+    "societe": "Carmignac",
+    "ats": "inconnu",
+    "domaine": "carmignac.com"
+  },
+  {
+    "societe": "La Financiere de l Echiquier",
+    "ats": "inconnu",
+    "domaine": "lfde.com"
+  },
+  {
+    "societe": "LBP AM",
+    "ats": "inconnu",
+    "domaine": "lbpam.com"
+  },
+  {
+    "societe": "Groupama AM",
+    "ats": "inconnu",
+    "domaine": "groupama-am.com"
+  },
+  {
+    "societe": "CPR AM",
+    "ats": "inconnu",
+    "domaine": "cpr-am.com"
+  },
+  {
+    "societe": "Sycomore AM",
+    "ats": "inconnu",
+    "domaine": "sycomore-am.com"
+  },
+  {
+    "societe": "Comgest",
+    "ats": "inconnu",
+    "domaine": "comgest.com"
+  },
+  {
+    "societe": "Lazard Freres Gestion",
+    "ats": "inconnu",
+    "domaine": "lazardfreresgestion.fr"
+  },
+  {
+    "societe": "Rothschild & Co AM",
+    "ats": "inconnu",
+    "domaine": "am.eu.rothschildandco.com"
+  },
+  {
+    "societe": "Montpensier Finance",
+    "ats": "inconnu",
+    "domaine": "montpensier.com"
+  },
+  {
+    "societe": "Meeschaert",
+    "ats": "inconnu",
+    "domaine": "meeschaert.com"
+  },
+  {
+    "societe": "Ardian",
+    "ats": "inconnu",
+    "domaine": "ardian.com"
+  },
+  {
+    "societe": "Eurazeo",
+    "ats": "inconnu",
+    "domaine": "eurazeo.com"
+  },
+  {
+    "societe": "Swiss Life AM",
+    "ats": "inconnu",
+    "domaine": "swisslife-am.com"
+  },
+  {
+    "societe": "Allianz Global Investors",
+    "ats": "inconnu",
+    "domaine": "allianzgi.com"
+  },
+  {
+    "societe": "DWS",
+    "ats": "inconnu",
+    "domaine": "dws.com"
+  },
+  {
+    "societe": "Deka",
+    "ats": "inconnu",
+    "domaine": "deka.de"
+  },
+  {
+    "societe": "Robeco",
+    "ats": "inconnu",
+    "domaine": "robeco.com"
+  },
+  {
+    "societe": "Goldman Sachs AM",
+    "ats": "inconnu",
+    "domaine": "gsam.com"
+  },
+  {
+    "societe": "BlackRock",
+    "ats": "inconnu",
+    "domaine": "blackrock.com"
+  },
+  {
+    "societe": "Vanguard",
+    "ats": "inconnu",
+    "domaine": "vanguard.com"
+  },
+  {
+    "societe": "Fidelity International",
+    "ats": "inconnu",
+    "domaine": "fidelityinternational.com"
+  },
+  {
+    "societe": "Schroders",
+    "ats": "inconnu",
+    "domaine": "schroders.com"
+  },
+  {
+    "societe": "abrdn",
+    "ats": "inconnu",
+    "domaine": "abrdn.com"
+  },
+  {
+    "societe": "Janus Henderson",
+    "ats": "inconnu",
+    "domaine": "janushenderson.com"
+  },
+  {
+    "societe": "Invesco",
+    "ats": "inconnu",
+    "domaine": "invesco.com"
+  },
+  {
+    "societe": "Franklin Templeton",
+    "ats": "inconnu",
+    "domaine": "franklintempleton.com"
+  },
+  {
+    "societe": "PIMCO",
+    "ats": "workday",
+    "incomplet": true,
+    "source": "page /"
+  },
+  {
+    "societe": "Nordea AM",
+    "ats": "inconnu",
+    "domaine": "nordea.com"
+  },
+  {
+    "societe": "Pictet AM",
+    "ats": "successfactors",
+    "incomplet": true,
+    "source": "page /careers"
+  },
+  {
+    "societe": "Baillie Gifford",
+    "ats": "inconnu",
+    "domaine": "bailliegifford.com"
+  },
+  {
+    "societe": "M&G",
+    "ats": "inconnu",
+    "domaine": "mandg.com"
+  },
+  {
+    "societe": "Jupiter AM",
+    "ats": "inconnu",
+    "domaine": "jupiteram.com"
+  },
+  {
+    "societe": "Ninety One",
+    "ats": "inconnu",
+    "domaine": "ninetyone.com"
+  },
+  {
+    "societe": "Columbia Threadneedle",
+    "ats": "inconnu",
+    "domaine": "columbiathreadneedle.com"
+  },
+  {
+    "societe": "Neuberger Berman",
+    "ats": "inconnu",
+    "domaine": "nb.com"
+  },
+  {
+    "societe": "PGIM",
+    "ats": "inconnu",
+    "domaine": "pgim.com"
+  },
+  {
+    "societe": "Federated Hermes",
+    "ats": "inconnu",
+    "domaine": "federatedhermes.com"
+  },
+  {
+    "societe": "First Sentier",
+    "ats": "inconnu",
+    "domaine": "firstsentierinvestors.com"
+  }
+]

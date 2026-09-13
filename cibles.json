@@ -1,0 +1,57 @@
+[
+  {
+    "societe": "Tikehau Capital",
+    "ats": "smartrecruiters",
+    "company": "tikehaucapital"
+  },
+  {
+    "societe": "Union Investment",
+    "ats": "ashby",
+    "company": "union"
+  },
+  {
+    "societe": "T Rowe Price",
+    "ats": "workday",
+    "tenant": "troweprice",
+    "host": "wd5",
+    "site": "jobs"
+  },
+  {
+    "societe": "Capital Group",
+    "ats": "lever",
+    "company": "capital"
+  },
+  {
+    "societe": "Wellington Management",
+    "ats": "workday",
+    "tenant": "wellington",
+    "host": "wd5",
+    "site": "External"
+  },
+  {
+    "societe": "MFS",
+    "ats": "workday",
+    "tenant": "mfs",
+    "host": "wd1",
+    "site": "MFS-Careers"
+  },
+  {
+    "societe": "GAM",
+    "ats": "workday",
+    "tenant": "gam",
+    "host": "wd3",
+    "site": "GAM"
+  },
+  {
+    "societe": "Man Group",
+    "ats": "greenhouse",
+    "token": "mangroup"
+  },
+  {
+    "societe": "Eastspring",
+    "ats": "workday",
+    "tenant": "prudential",
+    "host": "wd3",
+    "site": "prudential_eastspring"
+  }
+]

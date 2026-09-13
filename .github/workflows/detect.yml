@@ -1,0 +1,37 @@
+name: Detection des ATS
+
+on:
+  workflow_dispatch:
+    inputs:
+      categorie:
+        description: "Categorie a traiter : am, wm, assurance, ou vide pour tout"
+        required: false
+        default: "am"
+
+permissions:
+  contents: write
+
+jobs:
+  detection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Detection
+        run: python veille_ats.py detect ${{ inputs.categorie }}
+
+      - name: Enregistrer le carnet d adresses
+        if: always()
+        run: |
+          git config user.name "veille-bot"
+          git config user.email "veille-bot@users.noreply.github.com"
+          git add cibles.json non_detectees.json || true
+          git diff --staged --quiet || git commit -m "detection ${{ inputs.categorie }}"
+          git push

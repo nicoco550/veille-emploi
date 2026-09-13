@@ -1,0 +1,394 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tri des offres</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fond:#E4E7E2;
+    --carte:#FBFBF9;
+    --encre:#17211C;
+    --gris:#6C7671;
+    --trait:#CDD2CB;
+    --garder:#0F5C4A;
+    --jeter:#A33B2A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Archivo',system-ui,sans-serif;
+    background:var(--fond);
+    color:var(--encre);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:520px;padding:14px 14px 22px;display:flex;flex-direction:column;gap:14px}
+
+  header{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .compteur{font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .compteur span{font-variant-numeric:tabular-nums}
+  .sous{font-size:13px;color:var(--gris)}
+  .lienreglages{font-size:13px;color:var(--gris);background:none;border:none;font-family:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px}
+  .lienreglages:hover{color:var(--encre)}
+
+  .pile{position:relative;height:460px}
+  .carte{
+    position:absolute;inset:0;
+    background:var(--carte);
+    border:1px solid var(--trait);
+    border-radius:14px;
+    padding:20px 18px;
+    display:flex;flex-direction:column;gap:12px;
+    overflow-y:auto;
+    touch-action:pan-y;
+    will-change:transform;
+  }
+  .carte.dessous{transform:scale(.97) translateY(10px);opacity:.55;pointer-events:none}
+  .carte.dessous2{transform:scale(.94) translateY(20px);opacity:.3;pointer-events:none}
+  .carte:focus-visible{outline:2px solid var(--encre);outline-offset:3px}
+
+  .societe{font-size:13px;font-weight:600;color:var(--gris);letter-spacing:.02em}
+  .poste{font-size:25px;font-weight:700;line-height:1.12;letter-spacing:-.025em}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .puce{font-size:12px;font-weight:500;border:1px solid var(--trait);border-radius:100px;padding:3px 9px;color:var(--gris)}
+  .puce.visa{border-color:var(--garder);color:var(--garder)}
+  .puce.alerte{border-color:var(--jeter);color:var(--jeter)}
+  .bloc h3{font-size:12px;font-weight:600;color:var(--gris);margin-bottom:5px}
+  .bloc ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+  .bloc li{font-size:14px;line-height:1.42;padding-left:13px;position:relative}
+  .bloc li::before{content:"";position:absolute;left:0;top:8px;width:5px;height:1px;background:var(--gris)}
+  .carte a{font-size:13px;color:var(--encre);word-break:break-all;margin-top:auto}
+
+  .verdict{
+    position:absolute;top:16px;font-size:17px;font-weight:700;letter-spacing:-.01em;
+    padding:5px 12px;border-radius:8px;border:2px solid;opacity:0;
+    background:var(--carte);
+  }
+  .verdict.oui{right:16px;color:var(--garder);border-color:var(--garder)}
+  .verdict.non{left:16px;color:var(--jeter);border-color:var(--jeter)}
+
+  .actions{display:flex;gap:9px}
+  button.act{
+    flex:1;font-family:inherit;font-size:15px;font-weight:600;
+    padding:14px 8px;border-radius:11px;border:1px solid var(--trait);
+    background:var(--carte);color:var(--encre);cursor:pointer;
+  }
+  button.act:hover{border-color:var(--encre)}
+  button.act:disabled{opacity:.35;cursor:default}
+  button.non{color:var(--jeter)}
+  button.oui{color:var(--carte);background:var(--garder);border-color:var(--garder)}
+  button.annuler{flex:0 0 92px}
+
+  .vide{
+    height:460px;border:1px dashed var(--trait);border-radius:14px;
+    display:flex;flex-direction:column;justify-content:center;gap:10px;padding:26px;
+  }
+  .vide h2{font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .vide p{font-size:14px;line-height:1.5;color:var(--gris)}
+
+  .tiroir{display:none;flex-direction:column;gap:10px;border-top:1px solid var(--trait);padding-top:14px}
+  .tiroir.ouvert{display:flex}
+  .tiroir p{font-size:13px;line-height:1.5;color:var(--gris)}
+  textarea{
+    width:100%;height:120px;font-family:ui-monospace,Menlo,monospace;font-size:12px;
+    padding:10px;border:1px solid var(--trait);border-radius:10px;background:var(--carte);
+    color:var(--encre);resize:vertical;
+  }
+  .rangee{display:flex;gap:8px;flex-wrap:wrap}
+  button.sec{
+    font-family:inherit;font-size:13px;font-weight:500;padding:9px 13px;border-radius:9px;
+    border:1px solid var(--trait);background:var(--carte);color:var(--encre);cursor:pointer;
+  }
+  button.sec:hover{border-color:var(--encre)}
+  button.sec.danger{color:var(--jeter)}
+  .etat{font-size:13px;color:var(--garder);min-height:18px}
+  code{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;background:#DADFD9;padding:1px 4px;border-radius:4px}
+  @media (prefers-reduced-motion:reduce){.carte{transition:none!important}}
+</style>
+
+<div class="app">
+  <header>
+    <div>
+      <div class="compteur"><span id="cRestantes">0</span> à trier · <span id="cGardees">0</span> gardées</div>
+      <div class="sous" id="sousTitre">Glisse à droite pour garder</div>
+    </div>
+    <button class="lienreglages" id="btnTiroir">Offres et export</button>
+  </header>
+
+  <div class="pile" id="pile"></div>
+
+  <div class="actions">
+    <button class="act non" id="btnNon">Jeter</button>
+    <button class="act annuler" id="btnAnnuler">Annuler</button>
+    <button class="act oui" id="btnOui">Garder</button>
+  </div>
+
+  <div class="tiroir" id="tiroir">
+    <p>Colle ici le JSON produit par Claude for Chrome, puis charge-le. Les offres déjà triées sont conservées entre deux sessions.</p>
+    <textarea id="zoneJson" placeholder='[{"societe":"Amundi","poste":"Investment Specialist","ville":"Paris","pays":"France","contrat":"CDI","publie":"2026-09-11","visa":"UE, accès libre","missions":["..."],"exigences":["..."],"lien":"https://...","texte":"texte intégral de l annonce"}]'></textarea>
+    <div class="rangee">
+      <button class="sec" id="btnCharger">Charger les offres</button>
+      <button class="sec" id="btnExporter">Copier les offres gardées</button>
+      <button class="sec danger" id="btnVider">Tout effacer</button>
+    </div>
+    <div class="etat" id="etat"></div>
+    <p>Raccourcis clavier : flèche gauche pour jeter, flèche droite pour garder, <code>u</code> pour annuler.</p>
+  </div>
+</div>
+
+<script>
+const CLE = "swipe-offres:v1";
+let file = [];      // offres à trier
+let gardees = [];   // offres validées
+let historique = []; // {offre, verdict}
+let animation = false;
+
+const $ = id => document.getElementById(id);
+const pile = $("pile");
+
+const dansClaude = typeof window.storage !== "undefined";
+
+async function sauver(){
+  const charge = JSON.stringify({file, gardees, historique});
+  try{
+    if(dansClaude) await window.storage.set(CLE, charge);
+    else localStorage.setItem(CLE, charge);
+  }catch(e){ /* le tri continue même sans sauvegarde */ }
+}
+
+async function restaurer(){
+  try{
+    let brut = null;
+    if(dansClaude){
+      const r = await window.storage.get(CLE);
+      brut = r && r.value;
+    }else{
+      brut = localStorage.getItem(CLE);
+    }
+    if(brut){
+      const d = JSON.parse(brut);
+      file = d.file || []; gardees = d.gardees || []; historique = d.historique || [];
+    }
+  }catch(e){}
+  rendre();
+}
+
+function echappe(s){
+  return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function carteHTML(o, rang){
+  const visa = o.visa ? `<span class="puce ${/sponsor|pvt|vie|mobilit/i.test(o.visa)?'visa':''}">${echappe(o.visa)}</span>` : "";
+  const missions = (o.missions||[]).map(m=>`<li>${echappe(m)}</li>`).join("");
+  const exigences = (o.exigences||[]).map(m=>`<li>${echappe(m)}</li>`).join("");
+  return `
+    <article class="carte ${rang===1?'dessous':rang===2?'dessous2':''}" data-rang="${rang}" tabindex="${rang===0?0:-1}">
+      <div class="verdict oui">Garder</div>
+      <div class="verdict non">Jeter</div>
+      <div class="societe">${echappe(o.societe)}</div>
+      <h2 class="poste">${echappe(o.poste)}</h2>
+      <div class="meta">
+        <span class="puce">${echappe([o.ville,o.pays].filter(Boolean).join(", "))}</span>
+        ${o.contrat?`<span class="puce">${echappe(o.contrat)}</span>`:""}
+        ${o.publie?`<span class="puce">${echappe(o.publie)}</span>`:""}
+        ${visa}
+      </div>
+      ${missions?`<div class="bloc"><h3>Missions</h3><ul>${missions}</ul></div>`:""}
+      ${exigences?`<div class="bloc"><h3>Exigences clés</h3><ul>${exigences}</ul></div>`:""}
+      ${o.lien?`<a href="${echappe(o.lien)}" target="_blank" rel="noopener">${echappe(o.lien)}</a>`:""}
+    </article>`;
+}
+
+function rendre(){
+  $("cRestantes").textContent = file.length;
+  $("cGardees").textContent = gardees.length;
+  $("btnAnnuler").disabled = historique.length === 0;
+  $("btnNon").disabled = $("btnOui").disabled = file.length === 0;
+
+  if(file.length === 0){
+    $("sousTitre").textContent = gardees.length ? "Pile terminée" : "Aucune offre chargée";
+    pile.outerHTML = `<div class="vide" id="pile">
+      <h2>${gardees.length ? "Pile vidée" : "Rien à trier"}</h2>
+      <p>${gardees.length
+        ? `${gardees.length} offre(s) gardée(s). Ouvre « Offres et export » pour les copier dans ton agent CV, ou charge un nouveau lot.`
+        : "Ouvre « Offres et export », colle le JSON produit par Claude for Chrome, puis charge-le."}</p>
+    </div>`;
+    brancherTiroir();
+    return;
+  }
+  $("sousTitre").textContent = "Glisse à droite pour garder";
+  const p = document.getElementById("pile");
+  p.className = "pile";
+  p.innerHTML = file.slice(0,3).map((o,i)=>carteHTML(o,i)).reverse().join("");
+  brancherGlisse();
+}
+
+function brancherTiroir(){ /* les écouteurs du tiroir sont posés une fois, hors du rendu */ }
+
+function brancherGlisse(){
+  const carte = document.querySelector('.carte[data-rang="0"]');
+  if(!carte) return;
+  let x0=0, dx=0, actif=false;
+
+  carte.addEventListener("pointerdown", e=>{
+    if(e.target.tagName === "A") return;
+    actif=true; x0=e.clientX; carte.setPointerCapture(e.pointerId); carte.style.transition="none";
+  });
+  carte.addEventListener("pointermove", e=>{
+    if(!actif) return;
+    dx = e.clientX - x0;
+    carte.style.transform = `translateX(${dx}px) rotate(${dx/26}deg)`;
+    carte.querySelector(".verdict.oui").style.opacity = Math.max(0, Math.min(1, dx/90));
+    carte.querySelector(".verdict.non").style.opacity = Math.max(0, Math.min(1, -dx/90));
+  });
+  const fin = () => {
+    if(!actif) return;
+    actif=false;
+    carte.style.transition="transform .22s ease, opacity .22s ease";
+    if(Math.abs(dx) > 95){ trancher(dx>0); }
+    else{
+      carte.style.transform="";
+      carte.querySelectorAll(".verdict").forEach(v=>v.style.opacity=0);
+    }
+    dx=0;
+  };
+  carte.addEventListener("pointerup", fin);
+  carte.addEventListener("pointercancel", fin);
+}
+
+function trancher(garder){
+  if(animation || file.length===0) return;
+  animation = true;
+  const carte = document.querySelector('.carte[data-rang="0"]');
+  const offre = file[0];
+  if(carte){
+    carte.style.transition = "transform .22s ease, opacity .22s ease";
+    carte.style.transform = `translateX(${garder?520:-520}px) rotate(${garder?18:-18}deg)`;
+    carte.style.opacity = 0;
+  }
+  setTimeout(async ()=>{
+    file.shift();
+    if(garder) gardees.push(offre);
+    historique.push({offre, garder});
+    animation = false;
+    rendre();
+    await sauver();
+  }, carte ? 190 : 0);
+}
+
+async function annuler(){
+  if(!historique.length || animation) return;
+  const dernier = historique.pop();
+  if(dernier.garder) gardees = gardees.filter(o => o !== dernier.offre);
+  file.unshift(dernier.offre);
+  rendre();
+  await sauver();
+}
+
+function exportTexte(){
+  return gardees.map((o,i)=>{
+    const ligne = [o.societe, o.poste, o.ville, o.pays, o.ref, o.lien].filter(Boolean).join(" / ");
+    return `=== OFFRE ${i+1} ===\n${ligne}\n\n${o.texte || "(texte intégral non fourni)"}`;
+  }).join("\n\n");
+}
+
+// écouteurs permanents
+$("btnOui").onclick = () => trancher(true);
+$("btnNon").onclick = () => trancher(false);
+$("btnAnnuler").onclick = annuler;
+$("btnTiroir").onclick = () => $("tiroir").classList.toggle("ouvert");
+
+$("btnCharger").onclick = async () => {
+  const brut = $("zoneJson").value.trim();
+  if(!brut){ $("etat").textContent = "Colle d'abord le JSON dans le cadre."; return; }
+  let data;
+  try{ data = JSON.parse(brut); }
+  catch(e){ $("etat").textContent = "JSON invalide : vérifie les virgules et les guillemets."; return; }
+  if(!Array.isArray(data)){ $("etat").textContent = "Le JSON doit être une liste d'offres entre crochets."; return; }
+  const vus = new Set([...file, ...gardees, ...historique.map(h=>h.offre)]
+    .map(o => `${o.societe}|${o.poste}|${o.ville}`.toLowerCase()));
+  const neuves = data.filter(o => !vus.has(`${o.societe}|${o.poste}|${o.ville}`.toLowerCase()));
+  file = file.concat(neuves);
+  $("zoneJson").value = "";
+  $("etat").textContent = `${neuves.length} offre(s) ajoutée(s), ${data.length - neuves.length} doublon(s) écarté(s).`;
+  rendre();
+  await sauver();
+};
+
+$("btnExporter").onclick = async () => {
+  if(!gardees.length){ $("etat").textContent = "Aucune offre gardée pour l'instant."; return; }
+  const texte = exportTexte();
+  try{
+    await navigator.clipboard.writeText(texte);
+    $("etat").textContent = `${gardees.length} offre(s) copiée(s), prêtes pour l'agent CV.`;
+  }catch(e){
+    $("zoneJson").value = texte;
+    $("etat").textContent = "Copie automatique refusée par le navigateur : le texte est dans le cadre ci-dessus.";
+  }
+};
+
+$("btnVider").onclick = async () => {
+  file = []; gardees = []; historique = [];
+  $("etat").textContent = "Tout est effacé.";
+  rendre();
+  await sauver();
+};
+
+document.addEventListener("keydown", e => {
+  if(e.target.tagName === "TEXTAREA") return;
+  if(e.key === "ArrowRight") trancher(true);
+  if(e.key === "ArrowLeft") trancher(false);
+  if(e.key.toLowerCase() === "u") annuler();
+});
+
+// ---- arrivee automatique des offres depuis le script de veille ----
+function dejaConnues(){
+  return new Set([...file, ...gardees, ...historique.map(h=>h.offre)]
+    .map(o => `${o.societe}|${o.poste}|${o.ville}`.toLowerCase()));
+}
+
+async function releverLesNouvelles(silencieux = true){
+  if(location.protocol === "file:") return;   // fichier ouvert en local, pas de flux
+  let data;
+  try{
+    const r = await fetch("offres.json?t=" + Date.now(), {cache:"no-store"});
+    if(!r.ok) return;
+    data = await r.json();
+  }catch(e){ return; }
+  if(!Array.isArray(data) || !data.length) return;
+
+  const vues = dejaConnues();
+  const neuves = data.filter(o => !vues.has(`${o.societe}|${o.poste}|${o.ville}`.toLowerCase()));
+  if(!neuves.length) return;
+
+  file = file.concat(neuves);
+  rendre();
+  await sauver();
+  signaler(neuves.length);
+}
+
+function signaler(n){
+  const mot = n > 1 ? `${n} nouvelles offres` : "1 nouvelle offre";
+  document.title = `(${n}) Tri des offres`;
+  const s = document.getElementById("sousTitre");
+  s.textContent = `${mot} viennent d'arriver`;
+  s.style.color = "var(--garder)";
+  s.style.fontWeight = "600";
+  setTimeout(()=>{ s.style.color=""; s.style.fontWeight=""; document.title = "Tri des offres"; }, 12000);
+  if(navigator.vibrate) navigator.vibrate([40,60,40]);
+  if("Notification" in window && Notification.permission === "granted"){
+    new Notification("Veille emploi", {body: `${mot} à trier.`});
+  }
+}
+
+if("Notification" in window && Notification.permission === "default" && location.protocol !== "file:"){
+  document.addEventListener("click", () => Notification.requestPermission(), {once:true});
+}
+
+releverLesNouvelles();
+setInterval(releverLesNouvelles, 60_000);
+
+restaurer();
+</script>

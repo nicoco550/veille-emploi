@@ -1,12 +1,14 @@
 """
-Veille emploi via les API publiques des ATS.
+Veille emploi.
 
-  python veille_ats.py detect    -> identifie l'ATS derriere chaque site carrieres
+  python veille_ats.py detect    -> (phase 2) identifie l'ATS derriere chaque site carrieres
   python veille_ats.py collect   -> une collecte, ecrit offres.json
+                                    phase 1 : eFinancialCareers uniquement
+                                    phase 2 : + les cibles detectees (cibles.json), si presentes
   python veille_ats.py serve     -> collecte toutes les heures + sert l'app de swipe
                                     sur http://localhost:8765
 
-Dependance unique : pip install requests
+Dependances : pip install requests beautifulsoup4
 Place swipe-offres.html dans le meme dossier que ce fichier.
 """
 
@@ -20,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import requests
+from bs4 import BeautifulSoup
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
@@ -288,6 +291,98 @@ def cibles():
 MOTS_CLES = ["Investment Specialist", "Product Specialist", "Investor Relations"]
 
 
+# ---------------------------------------------------------------- eFinancialCareers (phase 1)
+#
+# Une seule source pour l'instant : pas de detection ATS par societe, pas de lien
+# errone possible puisque eFinancialCareers pointe deja vers la bonne offre.
+# Perimetre geographique et types de contrat : cf. EFC_PAYS / EFC_CONTRATS_OK.
+# Categories de poste : aucun filtre pour l'instant (tout est collecte, puis
+# passe par filtrer() ci-dessous, qui ecarte deja les metiers hors perimetre).
+#
+# NB : eFinancialCareers n'a pas de flux RSS/API publique. La page de resultats
+# est cependant rendue cote serveur (le HTML recu par `requests` contient deja
+# le texte des offres), d'ou le parsing HTML ci-dessous plutot qu'un appel API.
+# A verifier/ajuster apres un premier `collect` reel si la structure a change.
+
+EFC_BASE = "https://www.efinancialcareers.fr/jobs"
+EFC_PAYS = ["FR", "LU", "CA", "DE", "PL", "GB"]   # ISO 3166-1 alpha-2
+EFC_PAGES = 4                                      # pages scrutees par pays et par tour (15 offres/page)
+EFC_LIEN = re.compile(r'href="(https://www\.efinancialcareers\.[a-z.]+/emploi-[^"?#]+?\.id\d+)"')
+EFC_CONTRAT = re.compile(
+    r"\b(CDI|CDD|Int[ée]rim|Stage\s*/?\s*Apprentissage|Alternance|Freelance)\b", re.I)
+EFC_AGE = re.compile(r"il y a\s+(\d+)\s*(minute|heure|jour|semaine|mois)", re.I)
+EFC_VILLE_PAYS = re.compile(
+    r"([^\n,]{2,60}),\s*"
+    r"(France|Luxembourg|Canada|Allemagne|Germany|Pologne|Poland|"
+    r"Royaume-Uni|United Kingdom|Angleterre|Suisse|Switzerland|Belgique|Belgium|"
+    r"Irlande|Ireland|Espagne|Spain|Italie|Italy|Pays-Bas|Netherlands)")
+
+
+def _efc_age_jours(bloc):
+    m = EFC_AGE.search(bloc)
+    if not m:
+        return 0
+    n, unite = int(m.group(1)), m.group(2).lower()
+    return {"minute": 0, "heure": 0, "jour": n, "semaine": n * 7, "mois": n * 30}.get(unite, 0)
+
+
+def depuis_efinancialcareers():
+    """Scrute la recherche eFinancialCareers pays par pays (phase 1)."""
+    for pays in EFC_PAYS:
+        vus_pays = set()
+        for page in range(1, EFC_PAGES + 1):
+            url = f"{EFC_BASE}?countryCode={pays}&pageSize=15&page={page}&language=fr"
+            try:
+                r = requests.get(url, headers=UA, timeout=TIMEOUT)
+            except Exception:
+                break
+            if r.status_code >= 400:
+                break
+            hrefs = list(dict.fromkeys(EFC_LIEN.findall(r.text)))  # uniques, en ordre
+            if not hrefs:
+                break
+            soup = BeautifulSoup(r.text, "html.parser")
+            liens = {a["href"]: a for a in soup.find_all("a", href=True) if a["href"] in hrefs}
+            nouveaux_cette_page = 0
+            for href in hrefs:
+                a = liens.get(href)
+                if a is None or href in vus_pays:
+                    continue
+                vus_pays.add(href)
+                nouveaux_cette_page += 1
+                titre = a.get_text(strip=True)
+                if not titre:
+                    continue
+                # remonte au plus petit ancetre qui contient la carte complete de l'offre
+                conteneur, bloc = a, ""
+                for _ in range(8):
+                    if conteneur.parent is None:
+                        break
+                    conteneur = conteneur.parent
+                    bloc = conteneur.get_text("\n", strip=True)
+                    if "Sauvegarder" in bloc:
+                        break
+                m_lieu = EFC_VILLE_PAYS.search(bloc)
+                ville = m_lieu.group(1).strip() if m_lieu else ""
+                pays_texte = m_lieu.group(2).strip() if m_lieu else pays
+                # le type de contrat est colle juste apres le pays, sans separateur
+                # ("Paris, FranceCDI") : on le cherche d'abord la, puis sur tout le bloc
+                reste_ligne = bloc[m_lieu.end():].split("\n", 1)[0] if m_lieu else ""
+                m_contrat = EFC_CONTRAT.search(reste_ligne) or EFC_CONTRAT.search(bloc)
+                m = re.search(r"\.id(\d+)$", href)
+                yield {
+                    "societe": "", "poste": titre,
+                    "ville": ville, "pays": pays_texte,
+                    "contrat": m_contrat.group(1) if m_contrat else "",
+                    "publie": (datetime.now() - timedelta(days=_efc_age_jours(bloc))).strftime("%Y-%m-%d"),
+                    "ref": f"efc-{m.group(1) if m else href}", "lien": href,
+                    "texte": bloc,
+                }
+            if nouveaux_cette_page == 0:
+                break
+            time.sleep(0.5)
+
+
 # ---------------------------------------------------------------- filtres
 
 REJET_CONTRAT = re.compile(
@@ -304,13 +399,21 @@ REJET_ASSURANCE = re.compile(
 REJET_BACKOFFICE = re.compile(
     r"\b(back[- ]office|saisie|data entry|gestion administrative des contrats)\b", re.I)
 ANNEES = re.compile(r"(\d{1,2})\s*(?:\+|à|-|to)?\s*(\d{1,2})?\s*(?:ans|years)", re.I)
-IDF = re.compile(
-    r"\b(paris|la d[ée]fense|courbevoie|puteaux|nanterre|levallois|neuilly|boulogne|issy|"
-    r"montrouge|saint-?ouen|clichy|[îi]le-?de-?france|9[2-5]\d{3}|7[5-8]\d{3})\b", re.I)
+QUEBEC = re.compile(
+    r"\b(qu[ée]bec|montr[ée]al|laval|gatineau|sherbrooke|trois-rivi[èe]res|saguenay|"
+    r"l[ée]vis|longueuil)\b", re.I)
+UK = re.compile(r"\b(london|londres|united kingdom|royaume-?uni|england|angleterre|\buk\b)\b", re.I)
+SPONSOR_OU_FR = re.compile(
+    r"\b(sponsor(?:ship)?|visa sponsorship|work permit sponsor|fran[çc]ais|francophone|"
+    r"french speak\w*|french language|langue fran[çc]aise|native french|bilingual french|"
+    r"fluent french)\b", re.I)
 PAYS_OK = re.compile(
     r"\b(france|luxembourg|belgi|suisse|switzerland|schweiz|geneva|gen[èe]ve|zurich|"
-    r"deutschland|germany|munich|m[üu]nchen|frankfurt|nederland|netherlands|amsterdam|"
-    r"ireland|irlande|dublin|espa|madrid|italia|italie|milano|milan|bruxelles|brussels)\b", re.I)
+    r"deutschland|germany|allemagne|munich|m[üu]nchen|frankfurt|berlin|nederland|netherlands|"
+    r"amsterdam|ireland|irlande|dublin|espa|madrid|italia|italie|milano|milan|bruxelles|brussels|"
+    r"canada|toronto|vancouver|calgary|ottawa|ontario|alberta|colombie-britannique|british columbia|"
+    r"manitoba|winnipeg|halifax|pologne|poland|warsaw|warszawa|krakow|cracovie|wroclaw|pozna|"
+    r"london|londres|united kingdom|royaume-?uni|england|angleterre)\b", re.I)
 
 
 def filtrer(o, jours=7):
@@ -319,9 +422,13 @@ def filtrer(o, jours=7):
     if REJET_CONTRAT.search(f"{o['poste']} {o['contrat']}") or \
        REJET_CONTRAT.search(o["texte"][:1500]):
         return "contrat : stage ou alternance"
-    if "france" in lieu.lower() and not IDF.search(lieu):
-        return f"lieu hors Ile-de-France ({lieu.strip()})"
-    if lieu.strip() and not IDF.search(lieu) and not PAYS_OK.search(lieu):
+    if "freelance" in (o.get("contrat") or "").lower():
+        return "contrat : freelance (hors perimetre)"
+    if "canada" in lieu.lower() and QUEBEC.search(lieu):
+        return f"Canada hors perimetre : Quebec ({lieu.strip()})"
+    if UK.search(lieu) and not SPONSOR_OU_FR.search(blob):
+        return f"UK sans sponsor ni mention francais ({lieu.strip()})"
+    if lieu.strip() and not PAYS_OK.search(lieu):
         return f"pays hors perimetre ({lieu.strip()})"
     if REJET_METIER.search(o["poste"]):
         return "metier hors perimetre"
@@ -383,6 +490,24 @@ def un_tour(verbeux=True):
     """Collecte, filtre, et renvoie uniquement les offres jamais vues."""
     vues = set(lire(FICHIER_VUES, []))
     neuves, rejets = [], []
+
+    # phase 1 : eFinancialCareers, toujours actif
+    try:
+        for o in depuis_efinancialcareers():
+            k = cle(o)
+            if k in vues:
+                continue
+            vues.add(k)
+            motif = filtrer(o)
+            if motif:
+                rejets.append(f"[eFC] {o['poste']} — {motif}")
+            else:
+                neuves.append(completer(o))
+    except Exception as e:
+        if verbeux:
+            print(f"   echec eFinancialCareers : {str(e)[:120]}")
+
+    # phase 2 : cibles detectees par societe (cibles.json), si presentes
     for c in cibles():
         ats = c["ats"]
         try:
@@ -457,8 +582,8 @@ def boucle_collecte():
 
 def lancer_serveur():
     if not cibles():
-        print("Aucune cible. Lance d'abord : python veille_ats.py detect")
-        return
+        print("Aucune cible societe (cibles.json) : la collecte tournera quand meme, "
+              "eFinancialCareers seul (phase 1). Lance 'detect' pour ajouter la phase 2.")
     if not os.path.exists("swipe-offres.html"):
         print("Place swipe-offres.html dans ce dossier avant de lancer serve.")
         return

@@ -8,7 +8,8 @@ Veille emploi.
   python veille_ats.py serve     -> collecte toutes les heures + sert l'app de swipe
                                     sur http://localhost:8765
 
-Dependances : pip install requests beautifulsoup4 cloudscraper
+Dependances : pip install requests beautifulsoup4 cloudscraper playwright
+              puis : playwright install --with-deps chromium
 Place swipe-offres.html dans le meme dossier que ce fichier.
 """
 
@@ -28,6 +29,11 @@ try:
     import cloudscraper
 except ImportError:
     cloudscraper = None
+
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
@@ -337,7 +343,7 @@ _efc_session = None
 def _get_efc_session():
     """Session dediee eFinancialCareers : passe par cloudscraper (resout le
     challenge JS anti-bot de Cloudflare) si la lib est dispo, sinon requests
-    normal en secours."""
+    normal en secours. Utilisee seulement si Playwright n'est pas disponible."""
     global _efc_session
     if _efc_session is None:
         if cloudscraper is not None:
@@ -348,23 +354,65 @@ def _get_efc_session():
     return _efc_session
 
 
+_efc_pw = None
+_efc_browser = None
+_efc_context = None
+
+
+def _get_efc_browser_context():
+    """Contexte Playwright (Chromium headless) partage pour toute la collecte :
+    un vrai navigateur passe le challenge anti-bot de Cloudflare (JS + fingerprint)
+    la ou un simple client HTTP (requests/cloudscraper) echoue."""
+    global _efc_pw, _efc_browser, _efc_context
+    if _efc_context is None:
+        _efc_pw = sync_playwright().start()
+        _efc_browser = _efc_pw.chromium.launch(headless=True)
+        _efc_context = _efc_browser.new_context(
+            user_agent=UA["User-Agent"], locale="fr-FR",
+            viewport={"width": 1366, "height": 900})
+        # masque le marqueur webdriver que Cloudflare regarde en premier
+        _efc_context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});")
+    return _efc_context
+
+
+def _efc_fetch_html(url):
+    """Recupere le HTML d'une page eFinancialCareers. Playwright (navigateur
+    headless complet) si dispo, sinon cloudscraper/requests en secours.
+    Renvoie (statut, html)."""
+    if sync_playwright is not None:
+        contexte = _get_efc_browser_context()
+        page = contexte.new_page()
+        try:
+            reponse = page.goto(url, timeout=TIMEOUT * 1000, wait_until="domcontentloaded")
+            page.wait_for_timeout(4000)  # laisse le challenge JS Cloudflare se resoudre
+            html = page.content()
+            statut = reponse.status if reponse else 200
+            return statut, html
+        finally:
+            page.close()
+    else:
+        session = _get_efc_session()
+        r = session.get(url, headers=UA, timeout=TIMEOUT)
+        return r.status_code, r.text
+
+
 def depuis_efinancialcareers():
     """Scrute la recherche eFinancialCareers pays par pays (phase 1)."""
-    session = _get_efc_session()
     for pays in EFC_PAYS:
         vus_pays = set()
-        for page in range(1, EFC_PAGES + 1):
-            url = f"{EFC_BASE}?countryCode={pays}&pageSize=15&page={page}&language=fr"
+        for page_n in range(1, EFC_PAGES + 1):
+            url = f"{EFC_BASE}?countryCode={pays}&pageSize=15&page={page_n}&language=fr"
             try:
-                r = session.get(url, headers=UA, timeout=TIMEOUT)
+                statut, html = _efc_fetch_html(url)
             except Exception:
                 break
-            if r.status_code >= 400:
+            if statut >= 400:
                 break
-            hrefs = list(dict.fromkeys(EFC_LIEN.findall(r.text)))  # uniques, en ordre
+            hrefs = list(dict.fromkeys(EFC_LIEN.findall(html)))  # uniques, en ordre
             if not hrefs:
                 break
-            soup = BeautifulSoup(r.text, "html.parser")
+            soup = BeautifulSoup(html, "html.parser")
             liens = {a["href"]: a for a in soup.find_all("a", href=True) if a["href"] in hrefs}
             nouveaux_cette_page = 0
             for href in hrefs:

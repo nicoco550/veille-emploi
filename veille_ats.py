@@ -8,7 +8,7 @@ Veille emploi.
   python veille_ats.py serve     -> collecte toutes les heures + sert l'app de swipe
                                     sur http://localhost:8765
 
-Dependances : pip install requests beautifulsoup4
+Dependances : pip install requests beautifulsoup4 cloudscraper
 Place swipe-offres.html dans le meme dossier que ce fichier.
 """
 
@@ -23,6 +23,11 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 
 import requests
 from bs4 import BeautifulSoup
+
+try:
+    import cloudscraper
+except ImportError:
+    cloudscraper = None
 
 UA = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"}
@@ -326,14 +331,32 @@ def _efc_age_jours(bloc):
     return {"minute": 0, "heure": 0, "jour": n, "semaine": n * 7, "mois": n * 30}.get(unite, 0)
 
 
+_efc_session = None
+
+
+def _get_efc_session():
+    """Session dediee eFinancialCareers : passe par cloudscraper (resout le
+    challenge JS anti-bot de Cloudflare) si la lib est dispo, sinon requests
+    normal en secours."""
+    global _efc_session
+    if _efc_session is None:
+        if cloudscraper is not None:
+            _efc_session = cloudscraper.create_scraper(
+                browser={"browser": "chrome", "platform": "darwin", "mobile": False})
+        else:
+            _efc_session = requests.Session()
+    return _efc_session
+
+
 def depuis_efinancialcareers():
     """Scrute la recherche eFinancialCareers pays par pays (phase 1)."""
+    session = _get_efc_session()
     for pays in EFC_PAYS:
         vus_pays = set()
         for page in range(1, EFC_PAGES + 1):
             url = f"{EFC_BASE}?countryCode={pays}&pageSize=15&page={page}&language=fr"
             try:
-                r = requests.get(url, headers=UA, timeout=TIMEOUT)
+                r = session.get(url, headers=UA, timeout=TIMEOUT)
             except Exception:
                 break
             if r.status_code >= 400:

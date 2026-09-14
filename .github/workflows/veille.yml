@@ -22,7 +22,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install requests beautifulsoup4 cloudscraper
+      - run: pip install requests beautifulsoup4 cloudscraper playwright
+
+      - run: playwright install --with-deps chromium
 
       - name: Collecte
         run: python veille_ats.py collect

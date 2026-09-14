@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - run: pip install requests beautifulsoup4
+      - run: pip install requests beautifulsoup4 cloudscraper
 
       - name: Detection
         run: python veille_ats.py detect ${{ inputs.categorie }}

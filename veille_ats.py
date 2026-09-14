@@ -593,7 +593,6 @@ def lancer_serveur():
     print("Ctrl+C pour arreter.")
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
 
-
 # ---------------------------------------------------------------- pilotage
 
 def lancer_collecte():

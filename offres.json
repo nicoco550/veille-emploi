@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "societe": "Capital Group",
+    "poste": "IAM Specialist",
+    "ville": "Warsaw, Mazowieckie, Poland",
+    "pays": "",
+    "contrat": "Hybrid",
+    "publie": "2026-09-28",
+    "ref": "a2fb0a6f-9031-4e75-b8cb-f78e12498c06",
+    "lien": "https://jobs.lever.co/capital/a2fb0a6f-9031-4e75-b8cb-f78e12498c06",
+    "texte": "We are a leading trading platform expanding to the four corners of the globe. Our top-rated products have won prestigious industry awards for their cutting-edge technology and seamless client experience. We deliver only the best, so we are always in search of the best people to join our ever-growing team.\nWe're looking for an experienced IAM Specialist to help keep access across our systems secure, efficient, and compliant. You'll sit where operations, security, and audit meet: tightening permissions, reducing risk, and supporting our access governance work. You'll work hands-on with tools like AWS, Okta, and Google Workspace, help extend our IAM practices into infrastructure and compliance, and use automation to replace manual access processes.",
+    "visa": "non mentionne",
+    "missions": [],
+    "exigences": []
+  }
+]

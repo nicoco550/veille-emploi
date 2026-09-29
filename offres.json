@@ -1,6 +1,20 @@
 [
   {
     "societe": "Capital Group",
+    "poste": "Application Security Architect",
+    "ville": "Warsaw, Mazowieckie, Poland",
+    "pays": "",
+    "contrat": "Hybrid",
+    "publie": "2026-09-29",
+    "ref": "7c3b22e2-7931-4e43-b47a-033d9492f167",
+    "lien": "https://jobs.lever.co/capital/7c3b22e2-7931-4e43-b47a-033d9492f167",
+    "texte": "Capital.com builds and operates web and mobile trading platforms, public and partner APIs, and the backend services behind them, all in a highly regulated environment. As Application Security Architect, you will be the senior design authority for the security of these products. You will set the direction for how we secure software at scale: you will own secure-by-design patterns and standards, lead threat modelling and architecture reviews, and define the application security baseline that engineering teams build against.\n\nWorking closely with the Product Security team and the Director of Product Security, you will guide AppSec processes and set the vision for your area without direct line management. You will treat security as a shared outcome rather than a gate, balancing strong protection with developer experience and delivery speed, and you will earn adoption through enablement rather than mandates.",
+    "visa": "non mentionne",
+    "missions": [],
+    "exigences": []
+  },
+  {
+    "societe": "Capital Group",
     "poste": "Workplace Experience Coordinator",
     "ville": "Warsaw, Mazowieckie, Poland",
     "pays": "",
